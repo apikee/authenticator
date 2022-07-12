@@ -1,0 +1,26 @@
+{
+  "name": "apikee-js",
+  "version": "0.0.1",
+  "files": ["dist"],
+  "main": "./dist/apikee-js.umd.js",
+  "module": "./dist/apikee-js.es.js",
+  "exports": {
+    ".": {
+      "import": "./dist/apikee-js.es.js",
+      "require": "./dist/apikee-js.umd.js"
+    }
+  },
+  "types": "./dist/main.d.ts",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build && tsc --emitDeclarationOnly",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "typescript": "^4.5.4",
+    "vite": "^2.9.9"
+  },
+  "dependencies": {
+    "axios": "^0.27.2"
+  }
+}
