@@ -3,8 +3,8 @@ import express from "express";
 import { Authenticator } from "../dist";
 
 const { refreshTokens, createTokens } = new Authenticator({
-  accessKey: "verysecretaccesskey",
-  refreshKey: "verysecretrefreshkey",
+  accessKey: "verySecretAccessKeyPleaseChangeMeOrUseDotenv",
+  refreshKey: "VerySecretRefreshKeyPleaseChangeMeOrUseDotenv",
 });
 
 const app = express();
