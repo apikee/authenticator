@@ -11,5 +11,5 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 __exportStar(require("./Authenticator"), exports);
-__exportStar(require("./MemoryStore"), exports);
+__exportStar(require("./stores"), exports);
 __exportStar(require("./cookieParser"), exports);

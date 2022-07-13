@@ -2,7 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import { cookieParser } from "./cookieParser";
 import { AuthenticatorProps, TokenConfig } from "./interfaces";
-import { MemoryStore } from "./MemoryStore";
+import { MemoryStore } from "./stores";
 
 export class Authenticator {
   constructor(protected _props: AuthenticatorProps) {

@@ -1,5 +1,5 @@
 export * from "./Authenticator";
-export * from "./MemoryStore";
+export * from "./stores";
 export * from "./cookieParser";
 
 declare global {

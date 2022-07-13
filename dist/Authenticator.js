@@ -6,13 +6,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Authenticator = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const cookieParser_1 = require("./cookieParser");
-const MemoryStore_1 = require("./MemoryStore");
+const stores_1 = require("./stores");
 class Authenticator {
     _props;
     constructor(_props) {
         this._props = _props;
         if (!this._props.store)
-            this._props.store = new MemoryStore_1.MemoryStore();
+            this._props.store = new stores_1.MemoryStore();
         this._initExpiredTokenCleanup();
     }
     _initExpiredTokenCleanup = () => {

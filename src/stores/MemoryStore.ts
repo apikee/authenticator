@@ -1,14 +1,18 @@
 import { JwtPayload } from "jsonwebtoken";
-import { Store } from "./interfaces";
+import { Store } from "../stores";
 
-export class MemoryStore implements Store {
+export class MemoryStore extends Store {
   private _data: Record<string, string> = {};
 
-  private _getTokenBySubject = (subject: string) => {
+  private _getTokenBySubject = (subject: string): string | undefined => {
     return Object.keys(this._data).find((key) => this._data[key] === subject);
   };
 
-  addToken = (token: string, subject: string, replace: boolean = false) => {
+  addToken = (
+    token: string,
+    subject: string,
+    replace: boolean = false
+  ): void => {
     if (replace) {
       const usedToken = this._getTokenBySubject(subject);
       usedToken && this.deleteToken(usedToken);
@@ -17,15 +21,15 @@ export class MemoryStore implements Store {
     this._data[token] = subject;
   };
 
-  findSubjectByToken = (token: string) => {
+  findSubjectByToken = (token: string): string => {
     return this._data[token];
   };
 
-  deleteToken = (token: string) => {
+  deleteToken = (token: string): void => {
     delete this._data[token];
   };
 
-  deleteAllTokensForSubject = (subject: string) => {
+  deleteAllTokensForSubject = (subject: string): void => {
     Object.keys(this._data)
       .filter((key) => this._data[key] === subject)
       .forEach((token) => this.deleteToken(token));
