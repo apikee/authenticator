@@ -65,12 +65,13 @@ class Authenticator {
     };
     createTokens = (replace = false) => (_, res, next) => {
         const oldEnd = res.end;
-        res.end = (data) => {
+        const oldSend = res.send;
+        res.end = (cb) => {
             if (res.subject) {
                 this.createSignInTokens(res, res.subject, replace, res?.payload);
             }
             res.end = oldEnd;
-            res.end(data);
+            return res.end(cb);
         };
         return next();
     };
@@ -120,7 +121,6 @@ class Authenticator {
             return this._clearCookieAndSendUnauthorized(res);
         this.createSignInTokens(res, subject, true);
         const lookupResult = subjectLookup ? await subjectLookup(subject) : null;
-        // @ts-ignore
         req.subject = lookupResult || subject;
         return next();
     };

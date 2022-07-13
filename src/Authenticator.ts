@@ -75,16 +75,17 @@ export class Authenticator {
 
   createTokens =
     (replace: boolean = false) =>
-    (_: Request, res: any, next: NextFunction) => {
+    (_: Request, res: Response, next: NextFunction) => {
       const oldEnd = res.end;
+      const oldSend = res.send;
 
-      res.end = (data: any) => {
+      res.end = (cb?: () => void | undefined): Response<any> => {
         if (res.subject) {
           this.createSignInTokens(res, res.subject, replace, res?.payload);
         }
 
         res.end = oldEnd;
-        res.end(data);
+        return res.end(cb);
       };
 
       return next();
@@ -171,7 +172,6 @@ export class Authenticator {
 
       const lookupResult = subjectLookup ? await subjectLookup(subject!) : null;
 
-      // @ts-ignore
       req.subject = lookupResult || subject;
 
       return next();

@@ -33,9 +33,7 @@ app.get("/signIn", createTokens(), (req, res) => {
   if (!user) return res.sendStatus(401);
   if (user.password !== password) return res.sendStatus(401);
 
-  // @ts-ignore
   res.subject = user.id;
-  // @ts-ignore
   res.payload = { wtf: true };
 
   res.json({ success: true, user });
@@ -45,7 +43,6 @@ app.get(
   "/refresh",
   refreshTokens((id) => database.users.find((u) => u.id === id)),
   (req, res) => {
-    // @ts-ignore
     res.json({ subject: req.subject });
   }
 );
