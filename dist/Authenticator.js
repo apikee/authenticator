@@ -63,6 +63,17 @@ class Authenticator {
             subject: config.subject,
         });
     };
+    createTokens = (replace = false) => (_, res, next) => {
+        const oldEnd = res.end;
+        res.end = (data) => {
+            if (res.subject) {
+                this.createSignInTokens(res, res.subject, replace, res?.payload);
+            }
+            res.end = oldEnd;
+            res.end(data);
+        };
+        return next();
+    };
     createSignInTokens = (res, subject, replace = false, payload = {}) => {
         if (!subject)
             throw new Error("Cannot generate tokens without subject");
@@ -91,7 +102,7 @@ class Authenticator {
         this._props.store?.deleteAllTokensForSubject(sub);
         return { reuse: true };
     };
-    refreshTokens = (req, res, next) => {
+    refreshTokens = (subjectLookup) => async (req, res, next) => {
         if (!req.headers.cookie)
             return res.sendStatus(401);
         const cookies = (0, cookieParser_1.cookieParser)(req.headers.cookie);
@@ -108,6 +119,9 @@ class Authenticator {
         if (subject !== validatedToken.sub)
             return this._clearCookieAndSendUnauthorized(res);
         this.createSignInTokens(res, subject, true);
+        const lookupResult = subjectLookup ? await subjectLookup(subject) : null;
+        // @ts-ignore
+        req.subject = lookupResult || subject;
         return next();
     };
 }

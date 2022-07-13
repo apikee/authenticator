@@ -12,7 +12,6 @@ class MemoryStore {
             usedToken && this.deleteToken(usedToken);
         }
         this._data[token] = subject;
-        console.log(this._data);
     };
     findSubjectByToken = (token) => {
         return this._data[token];

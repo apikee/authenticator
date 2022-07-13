@@ -12,6 +12,7 @@ export declare class Authenticator {
     private _clearCookieAndSendUnauthorized;
     validateToken: (type: "access" | "refresh", token: string) => JwtPayload | string | null;
     generateToken: (type: "access" | "refresh", config: TokenConfig) => string;
+    createTokens: (replace?: boolean) => (_: Request, res: any, next: NextFunction) => void;
     createSignInTokens: (res: Response, subject: string, replace?: boolean, payload?: any) => {
         accessToken: string;
         refreshToken: string;
@@ -19,5 +20,5 @@ export declare class Authenticator {
     checkForTokenReuse: (jwtPayload: JwtPayload, subject?: string | undefined) => {
         reuse: boolean;
     };
-    refreshTokens: (req: Request, res: Response, next: NextFunction) => void | Response<any, Record<string, any>>;
+    refreshTokens: (subjectLookup?: ((subject: string) => Promise<any> | any) | undefined) => (req: Request, res: Response, next: NextFunction) => Promise<void | Response<any, Record<string, any>>>;
 }

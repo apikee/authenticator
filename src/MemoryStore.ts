@@ -15,8 +15,6 @@ export class MemoryStore implements Store {
     }
 
     this._data[token] = subject;
-
-    console.log(this._data);
   };
 
   findSubjectByToken = (token: string) => {

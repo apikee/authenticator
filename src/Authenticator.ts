@@ -73,6 +73,23 @@ export class Authenticator {
     });
   };
 
+  createTokens =
+    (replace: boolean = false) =>
+    (_: Request, res: any, next: NextFunction) => {
+      const oldEnd = res.end;
+
+      res.end = (data: any) => {
+        if (res.subject) {
+          this.createSignInTokens(res, res.subject, replace, res?.payload);
+        }
+
+        res.end = oldEnd;
+        res.end(data);
+      };
+
+      return next();
+    };
+
   createSignInTokens = (
     res: Response,
     subject: string,
@@ -124,32 +141,39 @@ export class Authenticator {
     return { reuse: true };
   };
 
-  refreshTokens = (req: Request, res: Response, next: NextFunction) => {
-    if (!req.headers.cookie) return res.sendStatus(401);
+  refreshTokens =
+    (subjectLookup?: (subject: string) => Promise<any> | any) =>
+    async (req: Request, res: Response, next: NextFunction) => {
+      if (!req.headers.cookie) return res.sendStatus(401);
 
-    const cookies = cookieParser(req.headers.cookie);
-    if (!cookies.refreshToken) return res.sendStatus(401);
+      const cookies = cookieParser(req.headers.cookie);
+      if (!cookies.refreshToken) return res.sendStatus(401);
 
-    const { refreshToken } = cookies;
+      const { refreshToken } = cookies;
 
-    const validatedToken = this.validateToken("refresh", refreshToken);
+      const validatedToken = this.validateToken("refresh", refreshToken);
 
-    if (!validatedToken) return this._clearCookieAndSendUnauthorized(res);
+      if (!validatedToken) return this._clearCookieAndSendUnauthorized(res);
 
-    const subject = this._props.store?.findSubjectByToken(refreshToken);
+      const subject = this._props.store?.findSubjectByToken(refreshToken);
 
-    const { reuse } = this.checkForTokenReuse(
-      validatedToken as JwtPayload,
-      subject
-    );
+      const { reuse } = this.checkForTokenReuse(
+        validatedToken as JwtPayload,
+        subject
+      );
 
-    if (reuse) return this._clearCookieAndSendUnauthorized(res);
+      if (reuse) return this._clearCookieAndSendUnauthorized(res);
 
-    if (subject !== validatedToken.sub)
-      return this._clearCookieAndSendUnauthorized(res);
+      if (subject !== validatedToken.sub)
+        return this._clearCookieAndSendUnauthorized(res);
 
-    this.createSignInTokens(res, subject!, true);
+      this.createSignInTokens(res, subject!, true);
 
-    return next();
-  };
+      const lookupResult = subjectLookup ? await subjectLookup(subject!) : null;
+
+      // @ts-ignore
+      req.subject = lookupResult || subject;
+
+      return next();
+    };
 }
