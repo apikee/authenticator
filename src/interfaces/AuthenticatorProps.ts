@@ -4,8 +4,8 @@ export interface AuthenticatorProps {
   accessKey: string;
   refreshKey: string;
   domain?: string;
-  accessExpiresIn?: number;
-  refreshExpiresIn?: number;
+  accessExpiresInSeconds?: number;
+  refreshExpiresInSeconds?: number;
   sameSite?: "lax" | "none" | "strict";
   store?: Store;
 }

@@ -6,14 +6,14 @@ import { MemoryStore } from "./stores";
 import { SubjectLookup } from "./types";
 
 export class Authenticator {
-  constructor(protected _props: AuthenticatorProps) {
+  constructor(private _props: AuthenticatorProps) {
     if (!this._props.store) this._props.store = new MemoryStore();
     this._initExpiredTokenCleanup();
   }
 
   private _initExpiredTokenCleanup = () => {
     const timeout = setTimeout(async () => {
-      await this._props.store?.clearExpiredTokens(this.validateToken);
+      await this._props.store?.clearExpiredTokens(this._validateToken);
       clearTimeout(timeout);
       this._initExpiredTokenCleanup();
     }, 1000 * 60 * 60);
@@ -21,8 +21,9 @@ export class Authenticator {
 
   private _getConfig = () => {
     return {
-      accessExpiresIn: this._props.accessExpiresIn || 5 * 60,
-      refreshExpiresIn: this._props.refreshExpiresIn || 24 * 60 * 60,
+      accessExpiresInSeconds: this._props.accessExpiresInSeconds || 5 * 60,
+      refreshExpiresInSeconds:
+        this._props.refreshExpiresInSeconds || 24 * 60 * 60,
       sameSite: this._props.sameSite || "none",
       domain: this._props.domain || undefined,
     };
@@ -50,12 +51,13 @@ export class Authenticator {
     ]);
   };
 
-  private _clearCookieAndSendUnauthorized = (res: Response) => {
+  private _clearCookieAndSendUnauthorized = (res: Response, token: string) => {
+    this._props.store?.deleteToken(token);
     this._clearCookie(res);
     return res.sendStatus(401);
   };
 
-  validateToken = (
+  private _validateToken = (
     type: "access" | "refresh",
     token: string
   ): JwtPayload | string | null => {
@@ -67,7 +69,10 @@ export class Authenticator {
     }
   };
 
-  generateToken = (type: "access" | "refresh", config: TokenConfig) => {
+  private _generateToken = (
+    type: "access" | "refresh",
+    config: TokenConfig
+  ) => {
     return jwt.sign({ payload: config.payload || {} }, this._getSignKey(type), {
       expiresIn: `${config.expiresIn}s`,
       subject: config.subject,
@@ -80,7 +85,7 @@ export class Authenticator {
 
       res.end = (cb?: () => void | undefined): Response<any> => {
         if (res.subject) {
-          this.createSignInTokens(res, res.subject, replace, res?.payload);
+          this._createSignInTokens(res, res.subject, replace, res?.payload);
         }
 
         res.end = oldEnd;
@@ -91,7 +96,7 @@ export class Authenticator {
     };
   };
 
-  createSignInTokens = (
+  private _createSignInTokens = (
     res: Response,
     subject: string,
     replace: boolean = false,
@@ -99,27 +104,27 @@ export class Authenticator {
   ) => {
     if (!subject) throw new Error("Cannot generate tokens without subject");
 
-    const accessToken = this.generateToken("access", {
+    const accessToken = this._generateToken("access", {
       subject,
-      expiresIn: this._getConfig().accessExpiresIn,
+      expiresIn: this._getConfig().accessExpiresInSeconds,
       payload,
     });
 
-    const refreshToken = this.generateToken("refresh", {
+    const refreshToken = this._generateToken("refresh", {
       subject,
-      expiresIn: this._getConfig().refreshExpiresIn,
+      expiresIn: this._getConfig().refreshExpiresInSeconds,
     });
 
     res.setHeader("set-cookie", [
       this._getCookie(
         "accessToken",
         accessToken,
-        this._getConfig().accessExpiresIn
+        this._getConfig().accessExpiresInSeconds
       ),
       this._getCookie(
         "refreshToken",
         refreshToken,
-        this._getConfig().refreshExpiresIn
+        this._getConfig().refreshExpiresInSeconds
       ),
     ]);
 
@@ -128,7 +133,7 @@ export class Authenticator {
     return { accessToken, refreshToken };
   };
 
-  checkForTokenReuse = (
+  private _checkForTokenReuse = (
     jwtPayload: JwtPayload,
     subject?: string
   ): { reuse: boolean } => {
@@ -151,25 +156,31 @@ export class Authenticator {
 
       const { refreshToken, accessToken } = cookies;
 
-      const validatedToken = this.validateToken("refresh", refreshToken);
+      const validatedToken = this._validateToken("refresh", refreshToken);
 
-      if (!validatedToken) return this._clearCookieAndSendUnauthorized(res);
+      if (!validatedToken)
+        return this._clearCookieAndSendUnauthorized(res, refreshToken);
 
       const subject = this._props.store?.findSubjectByToken(refreshToken);
 
-      const { reuse } = this.checkForTokenReuse(
+      const { reuse } = this._checkForTokenReuse(
         validatedToken as JwtPayload,
         subject
       );
 
-      if (reuse) return this._clearCookieAndSendUnauthorized(res);
+      if (reuse) return this._clearCookieAndSendUnauthorized(res, refreshToken);
 
       if (subject !== validatedToken.sub)
-        return this._clearCookieAndSendUnauthorized(res);
+        return this._clearCookieAndSendUnauthorized(res, refreshToken);
 
       const accessTokenDecoded = jwt.decode(accessToken || "") as any;
 
-      this.createSignInTokens(res, subject!, true, accessTokenDecoded?.payload);
+      this._createSignInTokens(
+        res,
+        subject!,
+        true,
+        accessTokenDecoded?.payload
+      );
 
       const lookupResult = subjectLookup ? await subjectLookup(subject!) : null;
 
@@ -199,20 +210,20 @@ export class Authenticator {
 
       const { accessToken, refreshToken } = cookies;
 
-      const validatedAccess = this.validateToken("access", accessToken);
-      const validatedRefresh = this.validateToken("refresh", refreshToken);
+      const validatedAccess = this._validateToken("access", accessToken);
+      const validatedRefresh = this._validateToken("refresh", refreshToken);
 
       if (!validatedAccess || !validatedRefresh) {
         if (requireValidAccess) return res.sendStatus(401);
         return next();
       }
 
-      const { reuse } = this.checkForTokenReuse(
+      const { reuse } = this._checkForTokenReuse(
         validatedRefresh as JwtPayload,
         this._props.store?.findSubjectByToken(refreshToken)
       );
 
-      if (reuse) return this._clearCookieAndSendUnauthorized(res);
+      if (reuse) return this._clearCookieAndSendUnauthorized(res, refreshToken);
 
       const lookupResult = subjectLookup
         ? await subjectLookup(validatedAccess.sub as string)
@@ -234,21 +245,24 @@ export class Authenticator {
 
       const { refreshToken, accessToken } = cookies;
 
-      const validatedToken = this.validateToken("refresh", refreshToken);
+      const validatedToken = this._validateToken("refresh", refreshToken);
 
-      if (!validatedToken) return this._clearCookieAndSendUnauthorized(res);
+      if (!validatedToken)
+        return this._clearCookieAndSendUnauthorized(res, refreshToken);
 
       const subject = this._props.store?.findSubjectByToken(refreshToken);
 
-      const { reuse } = this.checkForTokenReuse(
+      const { reuse } = this._checkForTokenReuse(
         validatedToken as JwtPayload,
         subject
       );
 
-      if (reuse) return this._clearCookieAndSendUnauthorized(res);
+      if (reuse) return this._clearCookieAndSendUnauthorized(res, refreshToken);
 
       if (subject !== validatedToken.sub)
-        return this._clearCookieAndSendUnauthorized(res);
+        return this._clearCookieAndSendUnauthorized(res, refreshToken);
+
+      this._props.store?.deleteToken(refreshToken);
 
       const accessTokenDecoded = jwt.decode(accessToken || "") as any;
 

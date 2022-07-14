@@ -17,15 +17,15 @@ class Authenticator {
     }
     _initExpiredTokenCleanup = () => {
         const timeout = setTimeout(async () => {
-            await this._props.store?.clearExpiredTokens(this.validateToken);
+            await this._props.store?.clearExpiredTokens(this._validateToken);
             clearTimeout(timeout);
             this._initExpiredTokenCleanup();
         }, 1000 * 60 * 60);
     };
     _getConfig = () => {
         return {
-            accessExpiresIn: this._props.accessExpiresIn || 5 * 60,
-            refreshExpiresIn: this._props.refreshExpiresIn || 24 * 60 * 60,
+            accessExpiresInSeconds: this._props.accessExpiresInSeconds || 5 * 60,
+            refreshExpiresInSeconds: this._props.refreshExpiresInSeconds || 24 * 60 * 60,
             sameSite: this._props.sameSite || "none",
             domain: this._props.domain || undefined,
         };
@@ -44,11 +44,12 @@ class Authenticator {
             "refreshToken=; Max-Age: 0;",
         ]);
     };
-    _clearCookieAndSendUnauthorized = (res) => {
+    _clearCookieAndSendUnauthorized = (res, token) => {
+        this._props.store?.deleteToken(token);
         this._clearCookie(res);
         return res.sendStatus(401);
     };
-    validateToken = (type, token) => {
+    _validateToken = (type, token) => {
         try {
             const decoded = jsonwebtoken_1.default.verify(token, this._getSignKey(type));
             return decoded;
@@ -57,7 +58,7 @@ class Authenticator {
             return null;
         }
     };
-    generateToken = (type, config) => {
+    _generateToken = (type, config) => {
         return jsonwebtoken_1.default.sign({ payload: config.payload || {} }, this._getSignKey(type), {
             expiresIn: `${config.expiresIn}s`,
             subject: config.subject,
@@ -68,7 +69,7 @@ class Authenticator {
             const oldEnd = res.end;
             res.end = (cb) => {
                 if (res.subject) {
-                    this.createSignInTokens(res, res.subject, replace, res?.payload);
+                    this._createSignInTokens(res, res.subject, replace, res?.payload);
                 }
                 res.end = oldEnd;
                 return res.end(cb);
@@ -76,26 +77,26 @@ class Authenticator {
             return next();
         };
     };
-    createSignInTokens = (res, subject, replace = false, payload = {}) => {
+    _createSignInTokens = (res, subject, replace = false, payload = {}) => {
         if (!subject)
             throw new Error("Cannot generate tokens without subject");
-        const accessToken = this.generateToken("access", {
+        const accessToken = this._generateToken("access", {
             subject,
-            expiresIn: this._getConfig().accessExpiresIn,
+            expiresIn: this._getConfig().accessExpiresInSeconds,
             payload,
         });
-        const refreshToken = this.generateToken("refresh", {
+        const refreshToken = this._generateToken("refresh", {
             subject,
-            expiresIn: this._getConfig().refreshExpiresIn,
+            expiresIn: this._getConfig().refreshExpiresInSeconds,
         });
         res.setHeader("set-cookie", [
-            this._getCookie("accessToken", accessToken, this._getConfig().accessExpiresIn),
-            this._getCookie("refreshToken", refreshToken, this._getConfig().refreshExpiresIn),
+            this._getCookie("accessToken", accessToken, this._getConfig().accessExpiresInSeconds),
+            this._getCookie("refreshToken", refreshToken, this._getConfig().refreshExpiresInSeconds),
         ]);
         this._props.store.addToken(refreshToken, subject, replace);
         return { accessToken, refreshToken };
     };
-    checkForTokenReuse = (jwtPayload, subject) => {
+    _checkForTokenReuse = (jwtPayload, subject) => {
         if (subject)
             return { reuse: false };
         const { sub } = jwtPayload;
@@ -112,17 +113,17 @@ class Authenticator {
             if (!cookies.refreshToken)
                 return res.sendStatus(401);
             const { refreshToken, accessToken } = cookies;
-            const validatedToken = this.validateToken("refresh", refreshToken);
+            const validatedToken = this._validateToken("refresh", refreshToken);
             if (!validatedToken)
-                return this._clearCookieAndSendUnauthorized(res);
+                return this._clearCookieAndSendUnauthorized(res, refreshToken);
             const subject = this._props.store?.findSubjectByToken(refreshToken);
-            const { reuse } = this.checkForTokenReuse(validatedToken, subject);
+            const { reuse } = this._checkForTokenReuse(validatedToken, subject);
             if (reuse)
-                return this._clearCookieAndSendUnauthorized(res);
+                return this._clearCookieAndSendUnauthorized(res, refreshToken);
             if (subject !== validatedToken.sub)
-                return this._clearCookieAndSendUnauthorized(res);
+                return this._clearCookieAndSendUnauthorized(res, refreshToken);
             const accessTokenDecoded = jsonwebtoken_1.default.decode(accessToken || "");
-            this.createSignInTokens(res, subject, true, accessTokenDecoded?.payload);
+            this._createSignInTokens(res, subject, true, accessTokenDecoded?.payload);
             const lookupResult = subjectLookup ? await subjectLookup(subject) : null;
             req.subject = lookupResult || subject;
             req.payload = accessTokenDecoded?.payload;
@@ -143,16 +144,16 @@ class Authenticator {
                 return next();
             }
             const { accessToken, refreshToken } = cookies;
-            const validatedAccess = this.validateToken("access", accessToken);
-            const validatedRefresh = this.validateToken("refresh", refreshToken);
+            const validatedAccess = this._validateToken("access", accessToken);
+            const validatedRefresh = this._validateToken("refresh", refreshToken);
             if (!validatedAccess || !validatedRefresh) {
                 if (requireValidAccess)
                     return res.sendStatus(401);
                 return next();
             }
-            const { reuse } = this.checkForTokenReuse(validatedRefresh, this._props.store?.findSubjectByToken(refreshToken));
+            const { reuse } = this._checkForTokenReuse(validatedRefresh, this._props.store?.findSubjectByToken(refreshToken));
             if (reuse)
-                return this._clearCookieAndSendUnauthorized(res);
+                return this._clearCookieAndSendUnauthorized(res, refreshToken);
             const lookupResult = subjectLookup
                 ? await subjectLookup(validatedAccess.sub)
                 : null;
@@ -169,15 +170,16 @@ class Authenticator {
             if (!cookies.refreshToken)
                 return res.sendStatus(401);
             const { refreshToken, accessToken } = cookies;
-            const validatedToken = this.validateToken("refresh", refreshToken);
+            const validatedToken = this._validateToken("refresh", refreshToken);
             if (!validatedToken)
-                return this._clearCookieAndSendUnauthorized(res);
+                return this._clearCookieAndSendUnauthorized(res, refreshToken);
             const subject = this._props.store?.findSubjectByToken(refreshToken);
-            const { reuse } = this.checkForTokenReuse(validatedToken, subject);
+            const { reuse } = this._checkForTokenReuse(validatedToken, subject);
             if (reuse)
-                return this._clearCookieAndSendUnauthorized(res);
+                return this._clearCookieAndSendUnauthorized(res, refreshToken);
             if (subject !== validatedToken.sub)
-                return this._clearCookieAndSendUnauthorized(res);
+                return this._clearCookieAndSendUnauthorized(res, refreshToken);
+            this._props.store?.deleteToken(refreshToken);
             const accessTokenDecoded = jsonwebtoken_1.default.decode(accessToken || "");
             const lookupResult = subjectLookup ? await subjectLookup(subject) : null;
             req.subject = lookupResult || subject;
