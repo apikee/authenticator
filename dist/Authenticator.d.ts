@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import { JwtPayload } from "jsonwebtoken";
 import { AuthenticatorProps, TokenConfig } from "./interfaces";
+import { SubjectLookup } from "./types";
 export declare class Authenticator {
     protected _props: AuthenticatorProps;
     constructor(_props: AuthenticatorProps);
@@ -12,7 +13,7 @@ export declare class Authenticator {
     private _clearCookieAndSendUnauthorized;
     validateToken: (type: "access" | "refresh", token: string) => JwtPayload | string | null;
     generateToken: (type: "access" | "refresh", config: TokenConfig) => string;
-    createTokens: (replace?: boolean) => (_: Request, res: Response, next: NextFunction) => void;
+    createAccess: (replace?: boolean) => (_: Request, res: Response, next: NextFunction) => void;
     createSignInTokens: (res: Response, subject: string, replace?: boolean, payload?: any) => {
         accessToken: string;
         refreshToken: string;
@@ -20,5 +21,7 @@ export declare class Authenticator {
     checkForTokenReuse: (jwtPayload: JwtPayload, subject?: string | undefined) => {
         reuse: boolean;
     };
-    refreshTokens: (subjectLookup?: ((subject: string) => Promise<any> | any) | undefined) => (req: Request, res: Response, next: NextFunction) => Promise<void | Response<any, Record<string, any>>>;
+    refreshAccess: (subjectLookup?: SubjectLookup | undefined) => (req: Request, res: Response, next: NextFunction) => Promise<void | Response<any, Record<string, any>>>;
+    validateAccess: (requireValidAccess?: boolean, subjectLookup?: SubjectLookup | undefined) => (req: Request, res: Response, next: NextFunction) => Promise<void | Response<any, Record<string, any>>>;
+    revokeAccess: (subjectLookup?: SubjectLookup | undefined) => (req: Request, res: Response, next: NextFunction) => Promise<void | Response<any, Record<string, any>>>;
 }

@@ -5,7 +5,8 @@ export * from "./cookieParser";
 declare global {
   namespace Express {
     interface Request {
-      subject: string;
+      subject: string | any;
+      payload?: any;
     }
 
     interface Response {

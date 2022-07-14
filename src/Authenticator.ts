@@ -3,6 +3,7 @@ import jwt, { JwtPayload } from "jsonwebtoken";
 import { cookieParser } from "./cookieParser";
 import { AuthenticatorProps, TokenConfig } from "./interfaces";
 import { MemoryStore } from "./stores";
+import { SubjectLookup } from "./types";
 
 export class Authenticator {
   constructor(protected _props: AuthenticatorProps) {
@@ -73,9 +74,8 @@ export class Authenticator {
     });
   };
 
-  createTokens =
-    (replace: boolean = false) =>
-    (_: Request, res: Response, next: NextFunction) => {
+  createAccess = (replace: boolean = false) => {
+    return (_: Request, res: Response, next: NextFunction) => {
       const oldEnd = res.end;
 
       res.end = (cb?: () => void | undefined): Response<any> => {
@@ -89,6 +89,7 @@ export class Authenticator {
 
       return next();
     };
+  };
 
   createSignInTokens = (
     res: Response,
@@ -141,9 +142,8 @@ export class Authenticator {
     return { reuse: true };
   };
 
-  refreshTokens =
-    (subjectLookup?: (subject: string) => Promise<any> | any) =>
-    async (req: Request, res: Response, next: NextFunction) => {
+  refreshAccess = (subjectLookup?: SubjectLookup) => {
+    return async (req: Request, res: Response, next: NextFunction) => {
       if (!req.headers.cookie) return res.sendStatus(401);
 
       const cookies = cookieParser(req.headers.cookie);
@@ -174,7 +174,92 @@ export class Authenticator {
       const lookupResult = subjectLookup ? await subjectLookup(subject!) : null;
 
       req.subject = lookupResult || subject;
+      req.payload = accessTokenDecoded?.payload;
 
       return next();
     };
+  };
+
+  validateAccess = (
+    requireValidAccess: boolean = true,
+    subjectLookup?: SubjectLookup
+  ) => {
+    return async (req: Request, res: Response, next: NextFunction) => {
+      if (!req.headers.cookie) {
+        if (requireValidAccess) return res.sendStatus(401);
+        return next();
+      }
+
+      const cookies = cookieParser(req.headers.cookie || "");
+
+      if (!cookies.accessToken || !cookies.refreshToken) {
+        if (requireValidAccess) return res.sendStatus(401);
+        return next();
+      }
+
+      const { accessToken, refreshToken } = cookies;
+
+      const validatedAccess = this.validateToken("access", accessToken);
+      const validatedRefresh = this.validateToken("refresh", refreshToken);
+
+      if (!validatedAccess || !validatedRefresh) {
+        if (requireValidAccess) return res.sendStatus(401);
+        return next();
+      }
+
+      const { reuse } = this.checkForTokenReuse(
+        validatedRefresh as JwtPayload,
+        this._props.store?.findSubjectByToken(refreshToken)
+      );
+
+      if (reuse) return this._clearCookieAndSendUnauthorized(res);
+
+      const lookupResult = subjectLookup
+        ? await subjectLookup(validatedAccess.sub as string)
+        : null;
+
+      req.subject = lookupResult || validatedAccess.sub;
+      req.payload = (validatedAccess as any)?.payload;
+
+      return next();
+    };
+  };
+
+  revokeAccess = (subjectLookup?: SubjectLookup) => {
+    return async (req: Request, res: Response, next: NextFunction) => {
+      if (!req.headers.cookie) return res.sendStatus(401);
+
+      const cookies = cookieParser(req.headers.cookie);
+      if (!cookies.refreshToken) return res.sendStatus(401);
+
+      const { refreshToken, accessToken } = cookies;
+
+      const validatedToken = this.validateToken("refresh", refreshToken);
+
+      if (!validatedToken) return this._clearCookieAndSendUnauthorized(res);
+
+      const subject = this._props.store?.findSubjectByToken(refreshToken);
+
+      const { reuse } = this.checkForTokenReuse(
+        validatedToken as JwtPayload,
+        subject
+      );
+
+      if (reuse) return this._clearCookieAndSendUnauthorized(res);
+
+      if (subject !== validatedToken.sub)
+        return this._clearCookieAndSendUnauthorized(res);
+
+      const accessTokenDecoded = jwt.decode(accessToken || "") as any;
+
+      const lookupResult = subjectLookup ? await subjectLookup(subject!) : null;
+
+      req.subject = lookupResult || subject;
+      req.payload = accessTokenDecoded?.payload;
+
+      this._clearCookie(res);
+
+      return next();
+    };
+  };
 }
