@@ -34,7 +34,7 @@ app.get("/signIn", createTokens(), (req, res) => {
   if (user.password !== password) return res.sendStatus(401);
 
   res.subject = user.id;
-  res.payload = { wtf: true };
+  res.payload = { demo: "payload" };
 
   res.json({ success: true, user });
 });

@@ -58,14 +58,13 @@ class Authenticator {
         }
     };
     generateToken = (type, config) => {
-        return jsonwebtoken_1.default.sign(config.payload || {}, this._getSignKey(type), {
+        return jsonwebtoken_1.default.sign({ payload: config.payload || {} }, this._getSignKey(type), {
             expiresIn: `${config.expiresIn}s`,
             subject: config.subject,
         });
     };
     createTokens = (replace = false) => (_, res, next) => {
         const oldEnd = res.end;
-        const oldSend = res.send;
         res.end = (cb) => {
             if (res.subject) {
                 this.createSignInTokens(res, res.subject, replace, res?.payload);
@@ -109,7 +108,7 @@ class Authenticator {
         const cookies = (0, cookieParser_1.cookieParser)(req.headers.cookie);
         if (!cookies.refreshToken)
             return res.sendStatus(401);
-        const { refreshToken } = cookies;
+        const { refreshToken, accessToken } = cookies;
         const validatedToken = this.validateToken("refresh", refreshToken);
         if (!validatedToken)
             return this._clearCookieAndSendUnauthorized(res);
@@ -119,7 +118,8 @@ class Authenticator {
             return this._clearCookieAndSendUnauthorized(res);
         if (subject !== validatedToken.sub)
             return this._clearCookieAndSendUnauthorized(res);
-        this.createSignInTokens(res, subject, true);
+        const accessTokenDecoded = jsonwebtoken_1.default.decode(accessToken || "");
+        this.createSignInTokens(res, subject, true, accessTokenDecoded?.payload);
         const lookupResult = subjectLookup ? await subjectLookup(subject) : null;
         req.subject = lookupResult || subject;
         return next();

@@ -67,7 +67,7 @@ export class Authenticator {
   };
 
   generateToken = (type: "access" | "refresh", config: TokenConfig) => {
-    return jwt.sign(config.payload || {}, this._getSignKey(type), {
+    return jwt.sign({ payload: config.payload || {} }, this._getSignKey(type), {
       expiresIn: `${config.expiresIn}s`,
       subject: config.subject,
     });
@@ -77,7 +77,6 @@ export class Authenticator {
     (replace: boolean = false) =>
     (_: Request, res: Response, next: NextFunction) => {
       const oldEnd = res.end;
-      const oldSend = res.send;
 
       res.end = (cb?: () => void | undefined): Response<any> => {
         if (res.subject) {
@@ -150,7 +149,7 @@ export class Authenticator {
       const cookies = cookieParser(req.headers.cookie);
       if (!cookies.refreshToken) return res.sendStatus(401);
 
-      const { refreshToken } = cookies;
+      const { refreshToken, accessToken } = cookies;
 
       const validatedToken = this.validateToken("refresh", refreshToken);
 
@@ -168,7 +167,9 @@ export class Authenticator {
       if (subject !== validatedToken.sub)
         return this._clearCookieAndSendUnauthorized(res);
 
-      this.createSignInTokens(res, subject!, true);
+      const accessTokenDecoded = jwt.decode(accessToken || "") as any;
+
+      this.createSignInTokens(res, subject!, true, accessTokenDecoded?.payload);
 
       const lookupResult = subjectLookup ? await subjectLookup(subject!) : null;
 
