@@ -57,10 +57,9 @@ app.get("/signIn", createAccess(), (req, res) => {
   if (!user) return res.sendStatus(401);
   if (user.password !== password) return res.sendStatus(401);
 
-  // Attaching "subject" and "payload" properties to response object.
-  // This is a signal for Authenticator to generate new tokens.
-  // If "subject" property is not present at the time of sending response,
-  // no tokens will be generated
+  // Attaching "subject" and "payload" properties to response object. This is a signal
+  // for Authenticator to generate new tokens. If "subject" property is not present at
+  // the time of sending response, no tokens will be generated.
   res.subject = user.id;
   res.payload = { demo: "payload" };
 
@@ -98,7 +97,7 @@ app.get("/refresh", refreshAccess(findUser), (req, res) => {
 // "validateAccess(false)". When false is provided and no/invalid access token is provided,
 // "validateAccess" will invoke the next() function, but will not attach subject to request object.
 // You can then react to this situation as you wish in your controller.
-// The subjectLookup is the same as /refresh endpoint (comment above).
+// The subjectLookup is the same as refresh endpoint (comment above).
 app.get("/protected", validateAccess(true, findUser), (req, res) => {
   res.json({
     message: "This route is only accessible with valid access token",
@@ -108,11 +107,11 @@ app.get("/protected", validateAccess(true, findUser), (req, res) => {
 });
 
 // Sign Out endpoint. "revokeAccess" middleware will destroy and invalidate tokens
-// present in cookies. It also accepts a subject lookup function, that will find user
-// related to tokens and attaches it to request object for the next controller.
+// present in cookies. It also accepts a subject lookup function as an argument,
+// that will find user related to tokens and attaches it to request object for the next controller.
 app.get("/signOut", revokeAccess(findUser), (req, res) => {
   res.json({
-    message: ("Access revoked for user " + req.subject.email) as any,
+    message: "Access revoked for user " + req.subject.email,
   });
 });
 
