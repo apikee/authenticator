@@ -1,8 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.MemoryStore = void 0;
-const stores_1 = require("../stores");
-class MemoryStore extends stores_1.Store {
+const Store_1 = require("./Store");
+class MemoryStore extends Store_1.Store {
     _data = {};
     addToken = async (token, subject, replace = false) => {
         if (replace) {
