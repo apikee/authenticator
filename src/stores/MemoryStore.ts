@@ -1,5 +1,5 @@
 import { JwtPayload } from "jsonwebtoken";
-import { Store } from "../stores";
+import { Store } from "./Store";
 
 export class MemoryStore extends Store {
   private _data: Record<string, string> = {};
