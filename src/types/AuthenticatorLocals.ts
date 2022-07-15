@@ -1,4 +1,4 @@
-export class AuthenticatorLocals<Subject = any, Payload = any> {
-  subject?: string | Subject;
+export class AuthenticatorLocals<Subject = string, Payload = any> {
+  subject?: Subject;
   payload?: Payload;
 }

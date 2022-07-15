@@ -42,8 +42,8 @@ const findUser = (subject: string) => {
 };
 
 // Sign In endpoint. "createAccess" middleware will generate access and refresh token
-// only if you attach a "subject" property (with user ID) to response object. Optionally you
-// can also attach a "payload" property to response object. "payload" can be an object or
+// only if you attach a "subject" property (with user ID) to res.locals object. Optionally you
+// can also attach a "payload" property to res.locals object. "payload" can be an object or
 // string with additional data connected to subject. "payload" is then included in access
 // token. By default, "createAccess()" allows users to sign in from multiple devices/places.
 // If you want your users to sign in from one device/place only, pass true to createAccess
@@ -57,7 +57,7 @@ app.get("/signIn", createAccess(), (req, res) => {
   if (!user) return res.sendStatus(401);
   if (user.password !== password) return res.sendStatus(401);
 
-  // Attaching "subject" and "payload" properties to response object. This is a signal
+  // Attaching "subject" and "payload" properties to res.locals object. This is a signal
   // for Authenticator to generate new tokens. If "subject" property is not present at
   // the time of sending response, no tokens will be generated.
   res.locals.subject = user.id;
@@ -80,7 +80,7 @@ app.get("/signIn", createAccess(), (req, res) => {
 // function that should return a subject (e.g. user). "refreshAccess" passes to the function
 // a subject (e.g. user ID) that is related with the token. You can then find and return
 // the user by the ID in your subject lookup function. This subject (e.g. user) is then attached
-// to "subject" property in request object. Subject lookup function can be async.
+// to res.locals.subject. Subject lookup function can be async.
 app.get("/refresh", refreshAccess(findUser), (req, res) => {
   res.json({ message: "Tokens were refreshed", subject: res.locals.subject });
 });
@@ -95,7 +95,7 @@ app.get("/refresh", refreshAccess(findUser), (req, res) => {
 // In some cases, you may have endpoints that are accessible for both authenticated and non-authenticated users.
 // You can disable the strict token validation by passing false to "validateAccess" first argument,
 // "validateAccess(false)". When false is provided and no/invalid access token is provided,
-// "validateAccess" will invoke the next() function, but will not attach subject to request object.
+// "validateAccess" will invoke the next() function, but will not attach subject res.locals.
 // You can then react to this situation as you wish in your controller.
 // The subjectLookup is the same as refresh endpoint (comment above).
 app.get("/protected", validateAccess(true, findUser), (req, res) => {
@@ -108,7 +108,7 @@ app.get("/protected", validateAccess(true, findUser), (req, res) => {
 
 // Sign Out endpoint. "revokeAccess" middleware will destroy and invalidate tokens
 // present in cookies. It also accepts a subject lookup function as an argument,
-// that will find user related to tokens and attaches it to request object for the next controller.
+// that will find user related to tokens and attaches it to res.locals object for the next controller.
 app.get("/signOut", revokeAccess(findUser), (req, res) => {
   res.json({
     message: "Access revoked for user " + res.locals.email,
