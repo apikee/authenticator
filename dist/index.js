@@ -13,3 +13,4 @@ Object.defineProperty(exports, "__esModule", { value: true });
 __exportStar(require("./Authenticator"), exports);
 __exportStar(require("./stores"), exports);
 __exportStar(require("./cookieParser"), exports);
+__exportStar(require("./types/AuthenticatorLocals"), exports);

@@ -68,8 +68,8 @@ class Authenticator {
         return (_, res, next) => {
             const oldEnd = res.end;
             res.end = (cb) => {
-                if (res.subject) {
-                    this._createSignInTokens(res, res.subject, replace, res?.payload);
+                if (res.locals.subject) {
+                    this._createSignInTokens(res, res.locals.subject, replace, res.locals?.payload);
                 }
                 res.end = oldEnd;
                 return res.end(cb);
@@ -126,8 +126,8 @@ class Authenticator {
             this._props.store?.deleteToken(refreshToken);
             this._createSignInTokens(res, subject, false, accessTokenDecoded?.payload);
             const lookupResult = subjectLookup ? await subjectLookup(subject) : null;
-            req.subject = lookupResult || subject;
-            req.payload = accessTokenDecoded?.payload;
+            res.locals.subject = lookupResult || subject;
+            res.locals.payload = accessTokenDecoded?.payload;
             return next();
         };
     };
@@ -158,8 +158,8 @@ class Authenticator {
             const lookupResult = subjectLookup
                 ? await subjectLookup(validatedAccess.sub)
                 : null;
-            req.subject = lookupResult || validatedAccess.sub;
-            req.payload = validatedAccess?.payload;
+            res.locals.subject = lookupResult || validatedAccess.sub;
+            res.locals.payload = validatedAccess?.payload;
             return next();
         };
     };
@@ -183,8 +183,8 @@ class Authenticator {
             this._props.store?.deleteToken(refreshToken);
             const accessTokenDecoded = jsonwebtoken_1.default.decode(accessToken || "");
             const lookupResult = subjectLookup ? await subjectLookup(subject) : null;
-            req.subject = lookupResult || subject;
-            req.payload = accessTokenDecoded?.payload;
+            res.locals.subject = lookupResult || subject;
+            res.locals.payload = accessTokenDecoded?.payload;
             this._clearCookie(res);
             return next();
         };

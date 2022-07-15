@@ -60,8 +60,8 @@ app.get("/signIn", createAccess(), (req, res) => {
   // Attaching "subject" and "payload" properties to response object. This is a signal
   // for Authenticator to generate new tokens. If "subject" property is not present at
   // the time of sending response, no tokens will be generated.
-  res.subject = user.id;
-  res.payload = { demo: "payload" };
+  res.locals.subject = user.id;
+  res.locals.payload = { demo: "payload" };
 
   // The authenticator intercepts the response, generates an access and
   // refresh token, adds it to the response cookie and sends it to the client
@@ -82,7 +82,7 @@ app.get("/signIn", createAccess(), (req, res) => {
 // the user by the ID in your subject lookup function. This subject (e.g. user) is then attached
 // to "subject" property in request object. Subject lookup function can be async.
 app.get("/refresh", refreshAccess(findUser), (req, res) => {
-  res.json({ message: "Tokens were refreshed", subject: req.subject });
+  res.json({ message: "Tokens were refreshed", subject: res.locals.subject });
 });
 
 // This can be any endpoint that requires authorization. "validateAccess" will check the
@@ -101,8 +101,8 @@ app.get("/refresh", refreshAccess(findUser), (req, res) => {
 app.get("/protected", validateAccess(true, findUser), (req, res) => {
   res.json({
     message: "This route is only accessible with valid access token",
-    user: req.subject,
-    payload: req.payload,
+    user: res.locals.subject,
+    payload: res.locals.payload,
   });
 });
 
@@ -111,7 +111,7 @@ app.get("/protected", validateAccess(true, findUser), (req, res) => {
 // that will find user related to tokens and attaches it to request object for the next controller.
 app.get("/signOut", revokeAccess(findUser), (req, res) => {
   res.json({
-    message: "Access revoked for user " + req.subject.email,
+    message: "Access revoked for user " + res.locals.email,
   });
 });
 

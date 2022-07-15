@@ -84,8 +84,13 @@ export class Authenticator {
       const oldEnd = res.end;
 
       res.end = (cb?: () => void | undefined): Response<any> => {
-        if (res.subject) {
-          this._createSignInTokens(res, res.subject, replace, res?.payload);
+        if (res.locals.subject) {
+          this._createSignInTokens(
+            res,
+            res.locals.subject,
+            replace,
+            res.locals?.payload
+          );
         }
 
         res.end = oldEnd;
@@ -186,8 +191,8 @@ export class Authenticator {
 
       const lookupResult = subjectLookup ? await subjectLookup(subject!) : null;
 
-      req.subject = lookupResult || subject;
-      req.payload = accessTokenDecoded?.payload;
+      res.locals.subject = lookupResult || subject;
+      res.locals.payload = accessTokenDecoded?.payload;
 
       return next();
     };
@@ -231,8 +236,8 @@ export class Authenticator {
         ? await subjectLookup(validatedAccess.sub as string)
         : null;
 
-      req.subject = lookupResult || validatedAccess.sub;
-      req.payload = (validatedAccess as any)?.payload;
+      res.locals.subject = lookupResult || validatedAccess.sub;
+      res.locals.payload = (validatedAccess as any)?.payload;
 
       return next();
     };
@@ -270,8 +275,8 @@ export class Authenticator {
 
       const lookupResult = subjectLookup ? await subjectLookup(subject!) : null;
 
-      req.subject = lookupResult || subject;
-      req.payload = accessTokenDecoded?.payload;
+      res.locals.subject = lookupResult || subject;
+      res.locals.payload = accessTokenDecoded?.payload;
 
       this._clearCookie(res);
 
