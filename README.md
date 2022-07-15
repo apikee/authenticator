@@ -3,7 +3,7 @@
 
 **Authenticator is a set of middlewares for express.js that helps you with secure JWT authentication in your app. Simply create an instance of Authenticator and use returned functions as middlewares on your endpoints.**
 
-NEEDS TO BE BUNDLED!!!
+# NEEDS TO BE BUNDLED!!!
 
 ## Features
 - Automatically generates access token with any payload you want
