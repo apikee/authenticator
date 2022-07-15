@@ -123,7 +123,8 @@ class Authenticator {
             if (subject !== validatedToken.sub)
                 return this._clearCookieAndSendUnauthorized(res, refreshToken);
             const accessTokenDecoded = jsonwebtoken_1.default.decode(accessToken || "");
-            this._createSignInTokens(res, subject, true, accessTokenDecoded?.payload);
+            this._props.store?.deleteToken(refreshToken);
+            this._createSignInTokens(res, subject, false, accessTokenDecoded?.payload);
             const lookupResult = subjectLookup ? await subjectLookup(subject) : null;
             req.subject = lookupResult || subject;
             req.payload = accessTokenDecoded?.payload;

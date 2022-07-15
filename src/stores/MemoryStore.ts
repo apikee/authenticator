@@ -4,18 +4,17 @@ import { Store } from "../stores";
 export class MemoryStore extends Store {
   private _data: Record<string, string> = {};
 
-  private _getTokenBySubject = (subject: string): string | undefined => {
-    return Object.keys(this._data).find((key) => this._data[key] === subject);
-  };
-
-  addToken = (
+  addToken = async (
     token: string,
     subject: string,
     replace: boolean = false
-  ): void => {
+  ): Promise<void> => {
     if (replace) {
-      const usedToken = this._getTokenBySubject(subject);
-      usedToken && this.deleteToken(usedToken);
+      const usedTokens = Object.keys(this._data).filter(
+        (token) => this._data[token] === subject
+      );
+
+      await Promise.all(usedTokens.map((token) => this.deleteToken(token)));
     }
 
     this._data[token] = subject;

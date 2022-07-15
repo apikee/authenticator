@@ -4,13 +4,10 @@ exports.MemoryStore = void 0;
 const stores_1 = require("../stores");
 class MemoryStore extends stores_1.Store {
     _data = {};
-    _getTokenBySubject = (subject) => {
-        return Object.keys(this._data).find((key) => this._data[key] === subject);
-    };
-    addToken = (token, subject, replace = false) => {
+    addToken = async (token, subject, replace = false) => {
         if (replace) {
-            const usedToken = this._getTokenBySubject(subject);
-            usedToken && this.deleteToken(usedToken);
+            const usedTokens = Object.keys(this._data).filter((token) => this._data[token] === subject);
+            await Promise.all(usedTokens.map((token) => this.deleteToken(token)));
         }
         this._data[token] = subject;
     };

@@ -175,10 +175,12 @@ export class Authenticator {
 
       const accessTokenDecoded = jwt.decode(accessToken || "") as any;
 
+      this._props.store?.deleteToken(refreshToken);
+
       this._createSignInTokens(
         res,
         subject!,
-        true,
+        false,
         accessTokenDecoded?.payload
       );
 

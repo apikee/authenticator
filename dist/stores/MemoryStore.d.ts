@@ -2,8 +2,7 @@ import { JwtPayload } from "jsonwebtoken";
 import { Store } from "../stores";
 export declare class MemoryStore extends Store {
     private _data;
-    private _getTokenBySubject;
-    addToken: (token: string, subject: string, replace?: boolean) => void;
+    addToken: (token: string, subject: string, replace?: boolean) => Promise<void>;
     findSubjectByToken: (token: string) => string;
     deleteToken: (token: string) => void;
     deleteAllTokensForSubject: (subject: string) => void;
