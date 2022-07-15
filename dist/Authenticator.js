@@ -13,6 +13,9 @@ class Authenticator {
         this._props = _props;
         if (!this._props.store)
             this._props.store = new stores_1.MemoryStore();
+        if (!this._props.rejectedAccessHandler) {
+            this._props.rejectedAccessHandler = (_, res) => res.sendStatus(401);
+        }
         this._initExpiredTokenCleanup();
     }
     _initExpiredTokenCleanup = () => {
@@ -44,10 +47,10 @@ class Authenticator {
             "refreshToken=; Max-Age: 0;",
         ]);
     };
-    _clearCookieAndSendUnauthorized = (res, token) => {
+    _clearCookieAndSendUnauthorized = (req, res, next, token) => {
         this._props.store?.deleteToken(token);
         this._clearCookie(res);
-        return res.sendStatus(401);
+        return this._props.rejectedAccessHandler(req, res, next);
     };
     _validateToken = (type, token) => {
         try {
@@ -108,20 +111,20 @@ class Authenticator {
     refreshAccess = (subjectLookup) => {
         return async (req, res, next) => {
             if (!req.headers.cookie)
-                return res.sendStatus(401);
+                return this._props.rejectedAccessHandler(req, res, next);
             const cookies = (0, cookieParser_1.cookieParser)(req.headers.cookie);
             if (!cookies.refreshToken)
-                return res.sendStatus(401);
+                return this._props.rejectedAccessHandler(req, res, next);
             const { refreshToken, accessToken } = cookies;
             const validatedToken = this._validateToken("refresh", refreshToken);
             if (!validatedToken)
-                return this._clearCookieAndSendUnauthorized(res, refreshToken);
+                return this._clearCookieAndSendUnauthorized(req, res, next, refreshToken);
             const subject = this._props.store?.findSubjectByToken(refreshToken);
             const { reuse } = this._checkForTokenReuse(validatedToken, subject);
             if (reuse)
-                return this._clearCookieAndSendUnauthorized(res, refreshToken);
+                return this._clearCookieAndSendUnauthorized(req, res, next, refreshToken);
             if (subject !== validatedToken.sub)
-                return this._clearCookieAndSendUnauthorized(res, refreshToken);
+                return this._clearCookieAndSendUnauthorized(req, res, next, refreshToken);
             const accessTokenDecoded = jsonwebtoken_1.default.decode(accessToken || "");
             this._props.store?.deleteToken(refreshToken);
             this._createSignInTokens(res, subject, false, accessTokenDecoded?.payload);
@@ -135,13 +138,13 @@ class Authenticator {
         return async (req, res, next) => {
             if (!req.headers.cookie) {
                 if (requireValidAccess)
-                    return res.sendStatus(401);
+                    return this._props.rejectedAccessHandler(req, res, next);
                 return next();
             }
             const cookies = (0, cookieParser_1.cookieParser)(req.headers.cookie || "");
             if (!cookies.accessToken || !cookies.refreshToken) {
                 if (requireValidAccess)
-                    return res.sendStatus(401);
+                    return this._props.rejectedAccessHandler(req, res, next);
                 return next();
             }
             const { accessToken, refreshToken } = cookies;
@@ -149,12 +152,12 @@ class Authenticator {
             const validatedRefresh = this._validateToken("refresh", refreshToken);
             if (!validatedAccess || !validatedRefresh) {
                 if (requireValidAccess)
-                    return res.sendStatus(401);
+                    return this._props.rejectedAccessHandler(req, res, next);
                 return next();
             }
             const { reuse } = this._checkForTokenReuse(validatedRefresh, this._props.store?.findSubjectByToken(refreshToken));
             if (reuse)
-                return this._clearCookieAndSendUnauthorized(res, refreshToken);
+                return this._clearCookieAndSendUnauthorized(req, res, next, refreshToken);
             const lookupResult = subjectLookup
                 ? await subjectLookup(validatedAccess.sub)
                 : null;
@@ -166,20 +169,20 @@ class Authenticator {
     revokeAccess = (subjectLookup) => {
         return async (req, res, next) => {
             if (!req.headers.cookie)
-                return res.sendStatus(401);
+                return this._props.rejectedAccessHandler(req, res, next);
             const cookies = (0, cookieParser_1.cookieParser)(req.headers.cookie);
             if (!cookies.refreshToken)
-                return res.sendStatus(401);
+                return this._props.rejectedAccessHandler(req, res, next);
             const { refreshToken, accessToken } = cookies;
             const validatedToken = this._validateToken("refresh", refreshToken);
             if (!validatedToken)
-                return this._clearCookieAndSendUnauthorized(res, refreshToken);
+                return this._clearCookieAndSendUnauthorized(req, res, next, refreshToken);
             const subject = this._props.store?.findSubjectByToken(refreshToken);
             const { reuse } = this._checkForTokenReuse(validatedToken, subject);
             if (reuse)
-                return this._clearCookieAndSendUnauthorized(res, refreshToken);
+                return this._clearCookieAndSendUnauthorized(req, res, next, refreshToken);
             if (subject !== validatedToken.sub)
-                return this._clearCookieAndSendUnauthorized(res, refreshToken);
+                return this._clearCookieAndSendUnauthorized(req, res, next, refreshToken);
             this._props.store?.deleteToken(refreshToken);
             const accessTokenDecoded = jsonwebtoken_1.default.decode(accessToken || "");
             const lookupResult = subjectLookup ? await subjectLookup(subject) : null;

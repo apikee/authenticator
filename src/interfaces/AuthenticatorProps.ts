@@ -1,3 +1,4 @@
+import { NextFunction, Request, Response } from "express";
 import { Store } from "../stores/Store";
 
 export interface AuthenticatorProps {
@@ -8,4 +9,9 @@ export interface AuthenticatorProps {
   refreshExpiresInSeconds?: number;
   sameSite?: "lax" | "none" | "strict";
   store?: Store;
+  rejectedAccessHandler?: (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => void;
 }

@@ -15,7 +15,7 @@ export declare class Authenticator {
     createAccess: (replace?: boolean) => (_: Request, res: Response, next: NextFunction) => void;
     private _createSignInTokens;
     private _checkForTokenReuse;
-    refreshAccess: (subjectLookup?: SubjectLookup | undefined) => (req: Request, res: Response, next: NextFunction) => Promise<void | Response<any, Record<string, any>>>;
-    validateAccess: (requireValidAccess?: boolean, subjectLookup?: SubjectLookup | undefined) => (req: Request, res: Response, next: NextFunction) => Promise<void | Response<any, Record<string, any>>>;
-    revokeAccess: (subjectLookup?: SubjectLookup | undefined) => (req: Request, res: Response, next: NextFunction) => Promise<void | Response<any, Record<string, any>>>;
+    refreshAccess: (subjectLookup?: SubjectLookup | undefined) => (req: Request, res: Response, next: NextFunction) => Promise<void>;
+    validateAccess: (requireValidAccess?: boolean, subjectLookup?: SubjectLookup | undefined) => (req: Request, res: Response, next: NextFunction) => Promise<void>;
+    revokeAccess: (subjectLookup?: SubjectLookup | undefined) => (req: Request, res: Response, next: NextFunction) => Promise<void>;
 }
