@@ -11,10 +11,14 @@ class Authenticator {
     _props;
     constructor(_props) {
         this._props = _props;
-        if (!this._props.store)
+        if (!this._props.store) {
             this._props.store = new stores_1.MemoryStore();
+        }
         if (!this._props.rejectedAccessHandler) {
             this._props.rejectedAccessHandler = (_, res) => res.sendStatus(401);
+        }
+        if (!this._props.cleanupEveryMs) {
+            this._props.cleanupEveryMs = 1000 * 60 * 60;
         }
         this._initExpiredTokenCleanup();
     }
@@ -23,7 +27,7 @@ class Authenticator {
             await this._props.store?.clearExpiredTokens(this._validateToken);
             clearTimeout(timeout);
             this._initExpiredTokenCleanup();
-        }, 1000 * 60 * 60);
+        }, this._props.cleanupEveryMs);
     };
     _getConfig = () => {
         return {

@@ -7,10 +7,16 @@ import { SubjectLookup } from "./types";
 
 export class Authenticator {
   constructor(private _props: AuthenticatorProps) {
-    if (!this._props.store) this._props.store = new MemoryStore();
+    if (!this._props.store) {
+      this._props.store = new MemoryStore();
+    }
 
     if (!this._props.rejectedAccessHandler) {
       this._props.rejectedAccessHandler = (_, res) => res.sendStatus(401);
+    }
+
+    if (!this._props.cleanupEveryMs) {
+      this._props.cleanupEveryMs = 1000 * 60 * 60;
     }
 
     this._initExpiredTokenCleanup();
@@ -21,7 +27,7 @@ export class Authenticator {
       await this._props.store?.clearExpiredTokens(this._validateToken);
       clearTimeout(timeout);
       this._initExpiredTokenCleanup();
-    }, 1000 * 60 * 60);
+    }, this._props.cleanupEveryMs);
   };
 
   private _getConfig = () => {

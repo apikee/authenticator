@@ -9,6 +9,7 @@ export interface AuthenticatorProps {
   refreshExpiresInSeconds?: number;
   sameSite?: "lax" | "none" | "strict";
   store?: Store;
+  cleanupEveryMs?: number;
   rejectedAccessHandler?: (
     req: Request,
     res: Response,
