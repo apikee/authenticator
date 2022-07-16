@@ -1,6 +1,10 @@
 {
   "name": "@apikee/authenticator",
   "version": "0.0.1",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/apikee/authenticator"
+  },
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "exports": {
