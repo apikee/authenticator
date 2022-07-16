@@ -1,8 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.MemoryStore = void 0;
-const Store_1 = require("./Store");
-class MemoryStore extends Store_1.Store {
+const authenticator_common_1 = require("@apikee/authenticator-common");
+class MemoryStore extends authenticator_common_1.Store {
     _data = {};
     addToken = async (token, subject, replace = false) => {
         if (replace) {

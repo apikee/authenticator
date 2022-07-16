@@ -1,5 +1,5 @@
 import { JwtPayload } from "jsonwebtoken";
-import { Store } from "./Store";
+import { Store } from "@apikee/authenticator-common";
 
 export class MemoryStore extends Store {
   private _data: Record<string, string> = {};

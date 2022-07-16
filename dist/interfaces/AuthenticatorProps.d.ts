@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import { Store } from "../stores/Store";
+import { Store } from "@apikee/authenticator-common";
 export interface AuthenticatorProps {
     accessKey: string;
     refreshKey: string;
