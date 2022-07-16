@@ -62,13 +62,13 @@ export class Authenticator {
     ]);
   };
 
-  private _clearCookieAndSendUnauthorized = (
+  private _clearCookieAndSendUnauthorized = async (
     req: Request,
     res: Response,
     next: NextFunction,
     token: string
   ) => {
-    this._props.store?.deleteToken(token);
+    await this._props.store?.deleteToken(token);
     this._clearCookie(res);
     return this._props.rejectedAccessHandler!(req, res, next);
   };
@@ -154,16 +154,16 @@ export class Authenticator {
     return { accessToken, refreshToken };
   };
 
-  private _checkForTokenReuse = (
+  private _checkForTokenReuse = async (
     jwtPayload: JwtPayload,
     subject?: string
-  ): { reuse: boolean } => {
+  ): Promise<{ reuse: boolean }> => {
     if (subject) return { reuse: false };
 
     const { sub } = jwtPayload;
     if (!sub) return { reuse: true };
 
-    this._props.store?.deleteAllTokensForSubject(sub);
+    await this._props.store?.deleteAllTokensForSubject(sub);
 
     return { reuse: true };
   };
@@ -189,11 +189,11 @@ export class Authenticator {
           refreshToken
         );
 
-      const subject = this._props.store?.findSubjectByToken(refreshToken);
+      const subject = await this._props.store?.findSubjectByToken(refreshToken);
 
-      const { reuse } = this._checkForTokenReuse(
+      const { reuse } = await this._checkForTokenReuse(
         validatedToken as JwtPayload,
-        subject
+        subject as string
       );
 
       if (reuse)
@@ -214,7 +214,7 @@ export class Authenticator {
 
       const accessTokenDecoded = jwt.decode(accessToken || "") as any;
 
-      this._props.store?.deleteToken(refreshToken);
+      await this._props.store?.deleteToken(refreshToken);
 
       this._createSignInTokens(
         res,
@@ -262,9 +262,9 @@ export class Authenticator {
         return next();
       }
 
-      const { reuse } = this._checkForTokenReuse(
+      const { reuse } = await this._checkForTokenReuse(
         validatedRefresh as JwtPayload,
-        this._props.store?.findSubjectByToken(refreshToken)
+        (await this._props.store?.findSubjectByToken(refreshToken)) as string
       );
 
       if (reuse)
@@ -307,11 +307,11 @@ export class Authenticator {
           refreshToken
         );
 
-      const subject = this._props.store?.findSubjectByToken(refreshToken);
+      const subject = await this._props.store?.findSubjectByToken(refreshToken);
 
-      const { reuse } = this._checkForTokenReuse(
+      const { reuse } = await this._checkForTokenReuse(
         validatedToken as JwtPayload,
-        subject
+        subject as string
       );
 
       if (reuse)
@@ -330,7 +330,7 @@ export class Authenticator {
           refreshToken
         );
 
-      this._props.store?.deleteToken(refreshToken);
+      await this._props.store?.deleteToken(refreshToken);
 
       const accessTokenDecoded = jwt.decode(accessToken || "") as any;
 

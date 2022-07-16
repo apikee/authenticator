@@ -27,7 +27,7 @@
     "typescript": "^4.7.4"
   },
   "dependencies": {
-    "@apikee/authenticator-common": "^0.0.2",
+    "@apikee/authenticator-common": "^0.0.5",
     "jsonwebtoken": "^8.5.1"
   }
 }

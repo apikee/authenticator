@@ -51,8 +51,8 @@ class Authenticator {
             "refreshToken=; Max-Age: 0;",
         ]);
     };
-    _clearCookieAndSendUnauthorized = (req, res, next, token) => {
-        this._props.store?.deleteToken(token);
+    _clearCookieAndSendUnauthorized = async (req, res, next, token) => {
+        await this._props.store?.deleteToken(token);
         this._clearCookie(res);
         return this._props.rejectedAccessHandler(req, res, next);
     };
@@ -103,13 +103,13 @@ class Authenticator {
         this._props.store.addToken(refreshToken, subject, replace);
         return { accessToken, refreshToken };
     };
-    _checkForTokenReuse = (jwtPayload, subject) => {
+    _checkForTokenReuse = async (jwtPayload, subject) => {
         if (subject)
             return { reuse: false };
         const { sub } = jwtPayload;
         if (!sub)
             return { reuse: true };
-        this._props.store?.deleteAllTokensForSubject(sub);
+        await this._props.store?.deleteAllTokensForSubject(sub);
         return { reuse: true };
     };
     refreshAccess = (subjectLookup) => {
@@ -123,14 +123,14 @@ class Authenticator {
             const validatedToken = this._validateToken("refresh", refreshToken);
             if (!validatedToken)
                 return this._clearCookieAndSendUnauthorized(req, res, next, refreshToken);
-            const subject = this._props.store?.findSubjectByToken(refreshToken);
-            const { reuse } = this._checkForTokenReuse(validatedToken, subject);
+            const subject = await this._props.store?.findSubjectByToken(refreshToken);
+            const { reuse } = await this._checkForTokenReuse(validatedToken, subject);
             if (reuse)
                 return this._clearCookieAndSendUnauthorized(req, res, next, refreshToken);
             if (subject !== validatedToken.sub)
                 return this._clearCookieAndSendUnauthorized(req, res, next, refreshToken);
             const accessTokenDecoded = jsonwebtoken_1.default.decode(accessToken || "");
-            this._props.store?.deleteToken(refreshToken);
+            await this._props.store?.deleteToken(refreshToken);
             this._createSignInTokens(res, subject, false, accessTokenDecoded?.payload);
             const lookupResult = subjectLookup ? await subjectLookup(subject) : null;
             res.locals.subject = lookupResult || subject;
@@ -159,7 +159,7 @@ class Authenticator {
                     return this._props.rejectedAccessHandler(req, res, next);
                 return next();
             }
-            const { reuse } = this._checkForTokenReuse(validatedRefresh, this._props.store?.findSubjectByToken(refreshToken));
+            const { reuse } = await this._checkForTokenReuse(validatedRefresh, (await this._props.store?.findSubjectByToken(refreshToken)));
             if (reuse)
                 return this._clearCookieAndSendUnauthorized(req, res, next, refreshToken);
             const lookupResult = subjectLookup
@@ -181,13 +181,13 @@ class Authenticator {
             const validatedToken = this._validateToken("refresh", refreshToken);
             if (!validatedToken)
                 return this._clearCookieAndSendUnauthorized(req, res, next, refreshToken);
-            const subject = this._props.store?.findSubjectByToken(refreshToken);
-            const { reuse } = this._checkForTokenReuse(validatedToken, subject);
+            const subject = await this._props.store?.findSubjectByToken(refreshToken);
+            const { reuse } = await this._checkForTokenReuse(validatedToken, subject);
             if (reuse)
                 return this._clearCookieAndSendUnauthorized(req, res, next, refreshToken);
             if (subject !== validatedToken.sub)
                 return this._clearCookieAndSendUnauthorized(req, res, next, refreshToken);
-            this._props.store?.deleteToken(refreshToken);
+            await this._props.store?.deleteToken(refreshToken);
             const accessTokenDecoded = jsonwebtoken_1.default.decode(accessToken || "");
             const lookupResult = subjectLookup ? await subjectLookup(subject) : null;
             res.locals.subject = lookupResult || subject;
