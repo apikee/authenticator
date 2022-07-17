@@ -41,7 +41,7 @@ const findUser = (subject: string) => {
   return database.users.find((u) => u.id === subject);
 };
 
-// Sign In endpoint. "createAccess" middleware will generate access and refresh token
+// "createAccess" middleware will generate access and refresh token
 // only if you attach a "subject" property (with user ID) to res.locals object. Optionally you
 // can also attach a "payload" property to res.locals object. "payload" can be an object or
 // string with additional data connected to subject. "payload" is then included in access
@@ -68,7 +68,7 @@ app.get("/signIn", createAccess(), (req, res) => {
   res.json({ message: "User is signed in / access was granted", user });
 });
 
-// Refresh Endpoint. This endpoint will refresh your current access token, either
+// This endpoint will refresh your current access token, either
 // valid or invalid. For that to happen, provided refresh token has to be valid.
 // It's necessary to call this endpoint when "validateAccess" middleware fails
 // with status 401 (Unauthorized). That means the access token is expired or otherwise
@@ -106,7 +106,7 @@ app.get("/protected", validateAccess(true, findUser), (req, res) => {
   });
 });
 
-// Sign Out endpoint. "revokeAccess" middleware will destroy and invalidate tokens
+// "revokeAccess" middleware will destroy and invalidate tokens
 // present in cookies. It also accepts a subject lookup function as an argument,
 // that will find user related to tokens and attaches it to res.locals object for the next controller.
 app.get("/signOut", revokeAccess(findUser), (req, res) => {
