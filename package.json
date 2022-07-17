@@ -1,7 +1,7 @@
 {
   "name": "@apikee/authenticator",
   "description": "Set of expressjs middlewares helping with JWT authentication",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "repository": {
     "type": "git",
     "url": "https://github.com/apikee/authenticator"
@@ -19,7 +19,12 @@
     "build": "tsc",
     "dev:example": "npx nodemon ./example/index.ts"
   },
-  "keywords": [],
+  "keywords": [
+    "authentication",
+    "JWT",
+    "jsonwebtoken",
+    "express"
+  ],
   "author": "Jakub Tomáš",
   "devDependencies": {
     "@types/express": "^4.17.13",
