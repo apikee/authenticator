@@ -1,5 +1,6 @@
 {
   "name": "@apikee/authenticator",
+  "description": "Set of expressjs middlewares helping with JWT authentication",
   "version": "0.0.1",
   "repository": {
     "type": "git",
@@ -27,7 +28,7 @@
     "typescript": "^4.7.4"
   },
   "dependencies": {
-    "@apikee/authenticator-common": "^0.0.5",
+    "@apikee/authenticator-common": "^0.0.7",
     "jsonwebtoken": "^8.5.1"
   }
 }

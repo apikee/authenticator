@@ -1,6 +1,5 @@
 ## @apikee/authenticator
 
-
 **Set of expressjs middlewares that creates, sends, validates and stores JWT access and refresh tokens. The goal is to make it easier for developers to implement secure authentication using JWT tokens.**
 
 **This package was just released and is not properly tested on real life projects - I would recommend it for hobby projects.**
@@ -11,13 +10,13 @@
 - Tokens are automatically attached to response cookies as a HttpOnly Secure cookies
 - Tokens are automatically validated through `validateAccess` middleware, including token reuse
 - Access tokens are short-lived, can be refreshed through `refreshAccess` middleware
-- Valid refresh tokens are stored in whitelist either in memory through MemoryStore, or in MongoDB, through MongoStore [@apikee/authenticator-mongostore](@apikee/authenticator-mongostore)
+- Valid refresh tokens are stored in whitelist either in memory through MemoryStore, or in MongoDB, through MongoStore [@apikee/authenticator-mongostore](https://github.com/apikee/authenticator-mongostore)
 - Developers can implement their own stores
 - Whitelist is periodically cleared from expired tokens
 - User lookup function can be provided to `validateAccess`, `refreshAccess` and `revokeAccess` middlewares. User will then be accessible in `res.locals.subject`
 - Default access from multiple devices
 
-**If you are using Nodejs Cluster Mode, you need to use a different store than default MemoryStore, since each worker in cluster mode would have it's own copy of token whitelist. Take a look at [@apikee/authenticator-mongostore](@apikee/authenticator-mongostore)**
+**If you are using Nodejs Cluster Mode, you need to use a different store than default MemoryStore, since each worker in cluster mode would have it's own copy of token whitelist. Take a look at [@apikee/authenticator-mongostore](https://github.com/apikee/authenticator-mongostore)**
 
 ## Installation
 
@@ -27,11 +26,7 @@ npm i @apikee/authenticator
 
 ## Demo
 
-You can test `@apikee/authenticator` locally either by running code inside the `example` folder, or you can clone the following project
-
-```tsx
-git clone ...
-```
+You can test `@apikee/authenticator` locally either by running code inside the `example` folder, or you take a look at the following demo API: https://github.com/apikee/authenticator-demo.git
 
 ## Usage
 
@@ -201,7 +196,7 @@ function findUser(subject: string) {
 
 ### Stores
 
-**By default, Authenticator uses MemoryStore to store whitelist of refresh tokens. There is also MongoStore that can be used [@apikee/authenticator-mongostore](@apikee/authenticator-mongostore). If you want to create Your own store, install the [@apikee/authenticator-common](@apikee/authenticator-common) and extend the Store class. Take a look at source code of MongoStore or MemoryStore, or on example provided in README.md for `@apikee/authenticator-common` to see, how your custom store should be implemented. It's quite easy.**
+**By default, Authenticator uses MemoryStore to store whitelist of refresh tokens. There is also MongoStore that can be used [@apikee/authenticator-mongostore](https://github.com/apikee/authenticator-mongostore). If you want to create Your own store, install the [@apikee/authenticator-common](https://github.com/apikee/authenticator-common) and extend the Store class. Take a look at source code of MongoStore or MemoryStore, or on example provided in README.md for [@apikee/authenticator-common](https://github.com/apikee/authenticator-common) to see, how your custom store should be implemented. It's quite easy.**
 
 ```tsx
 import { JwtPayload } from "jsonwebtoken";
