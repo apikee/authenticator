@@ -111,7 +111,7 @@ app.get("/protected", validateAccess(true, findUser), (req, res) => {
 // that will find user related to tokens and attaches it to res.locals object for the next controller.
 app.get("/signOut", revokeAccess(findUser), (req, res) => {
   res.json({
-    message: "Access revoked for user " + res.locals.email,
+    message: "Access revoked for user " + res.locals.subject?.email,
   });
 });
 
