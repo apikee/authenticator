@@ -3,7 +3,7 @@
 
 **Set of expressjs middlewares that creates, sends, validates and stores JWT access and refresh tokens. The goal is to make it easier for developers to implement secure authentication using JWT tokens.**
 
-**This library is not properly tested on real life projects - I would recommend it for hobby projects.**
+**This package was just released and is not properly tested on real life projects - I would recommend it for hobby projects.**
 
 ## Features
 
@@ -23,6 +23,14 @@
 
 ```tsx
 npm i @apikee/authenticator
+```
+
+## Demo
+
+You can test `@apikee/authenticator` locally either by running code inside the `example` folder, or you can clone the following project
+
+```tsx
+git clone ...
 ```
 
 ## Usage
@@ -193,7 +201,7 @@ function findUser(subject: string) {
 
 ### Stores
 
-**By default, Authenticator uses MemoryStore. There is also MongoStore that can be used [@apikee/authenticator-mongostore](@apikee/authenticator-mongostore). If you want to create Your own store, install the [@apikee/authenticator-common](@apikee/authenticator-common) and extend the Store class. Take a look at source code of MongoStore or MemoryStore to see, how your custom store should be implemented. It's quite easy.**
+**By default, Authenticator uses MemoryStore to store whitelist of refresh tokens. There is also MongoStore that can be used [@apikee/authenticator-mongostore](@apikee/authenticator-mongostore). If you want to create Your own store, install the [@apikee/authenticator-common](@apikee/authenticator-common) and extend the Store class. Take a look at source code of MongoStore or MemoryStore, or on example provided in README.md for `@apikee/authenticator-common` to see, how your custom store should be implemented. It's quite easy.**
 
 ```tsx
 import { JwtPayload } from "jsonwebtoken";
