@@ -19,9 +19,15 @@
 
 **If you are using Nodejs Cluster Mode, you need to use a different store than default MemoryStore, since each worker in cluster mode would have it's own copy of token whitelist. Take a look at @apikee/authenticator-mongostore**
 
+## Installation
+
+```tsx
+npm i @apikee/authenticator
+```
+
 ## Usage
 
-```
+```tsx
 import { Authenticator } from '@apikee/authenticator';
 
 const { createAccess, validateAccess, refreshAccess, revokeAccess } = new Authenticator({
