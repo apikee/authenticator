@@ -11,13 +11,13 @@
 - Tokens are automatically attached to response cookies as a HttpOnly Secure cookies
 - Tokens are automatically validated through `validateAccess` middleware, including token reuse
 - Access tokens are short-lived, can be refreshed through `refreshAccess` middleware
-- Valid refresh tokens are stored in whitelist either in memory through MemoryStore, or in MongoDB, through MongoStore (@apikee/authenticator-mongostore)
+- Valid refresh tokens are stored in whitelist either in memory through MemoryStore, or in MongoDB, through MongoStore [@apikee/authenticator-mongostore](@apikee/authenticator-mongostore)
 - Developers can implement their own stores
 - Whitelist is periodically cleared from expired tokens
 - User lookup function can be provided to `validateAccess`, `refreshAccess` and `revokeAccess` middlewares. User will then be accessible in `res.locals.subject`
 - Default access from multiple devices
 
-**If you are using Nodejs Cluster Mode, you need to use a different store than default MemoryStore, since each worker in cluster mode would have it's own copy of token whitelist. Take a look at @apikee/authenticator-mongostore**
+**If you are using Nodejs Cluster Mode, you need to use a different store than default MemoryStore, since each worker in cluster mode would have it's own copy of token whitelist. Take a look at [@apikee/authenticator-mongostore](@apikee/authenticator-mongostore)**
 
 ## Installation
 
@@ -193,7 +193,7 @@ function findUser(subject: string) {
 
 ### Stores
 
-**By default, Authenticator uses MemoryStore. There is also MongoStore that can be used (@apikee/authenticator-mongostore). If you want to create Your own store, install the @apikee/authenticator-common and extend the Store class. Take a look at source code of MongoStore or MemoryStore to see, how your custom store should be implemented. It's quite easy.**
+**By default, Authenticator uses MemoryStore. There is also MongoStore that can be used [@apikee/authenticator-mongostore](@apikee/authenticator-mongostore). If you want to create Your own store, install the [@apikee/authenticator-common](@apikee/authenticator-common) and extend the Store class. Take a look at source code of MongoStore or MemoryStore to see, how your custom store should be implemented. It's quite easy.**
 
 ```tsx
 import { JwtPayload } from "jsonwebtoken";
