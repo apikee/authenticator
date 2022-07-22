@@ -23,7 +23,10 @@
     "authentication",
     "JWT",
     "jsonwebtoken",
-    "express"
+    "express",
+    "refresh token",
+    "access token",
+    "validation"
   ],
   "author": "Jakub Tomáš",
   "devDependencies": {
